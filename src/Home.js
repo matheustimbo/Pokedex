@@ -7,7 +7,8 @@ import {
     TouchableOpacity,
     Image,
     StyleSheet,
-    SafeAreaView
+    SafeAreaView,
+    ActivityIndicator
 } from 'react-native'
 import LeftArrow from './assets/svgs/left-arrow.svg'
 import Menu from './assets/svgs/menu.svg'
@@ -123,12 +124,48 @@ export default class Home extends Component {
                     style={styles.flatList}
                     showsVerticalScrollIndicator={false}
                 />
+                {this.state.fetchingPokemon &&
+                    (
+                    <View style={styles.loadingContainer}>
+                        <View style={styles.loadingIndicator}>
+                            <ActivityIndicator
+                                size="large"
+                                color={colors.red}
+                            />
+                        </View>
+                    </View>
+                    )
+                }
+                
             </SafeAreaView>
         )
     }
 }
 
 const styles = StyleSheet.create({
+    loadingIndicator: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 4,
+        backgroundColor: 'white',
+        borderRadius: 50,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    loadingContainer: {
+        position: 'absolute',
+        left: 0,
+        bottom: 20,
+        width: width,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     typeCardText: {
         fontWeight: 'bold',
         color: 'white',
