@@ -126,21 +126,7 @@ export default class PokemonDetails extends Component {
                     style={[styles.bgPokeballOnTop, { transform: [{ rotate: spin }], opacity: bgPokeballOnTopOpacity}]}
                     source={require('./assets/imgs/pokeball.png')}
                 />
-                <TouchableOpacity
-                    style={styles.backBtn}
-                    onPress={() => {
-                        this.props.navigation.navigate('Home')
-                    }}
-                >
-                    <View style={{ width: 40, height: 40 }}>
-                        <ArrowLeft width={24} height={24} fill="white" />
-                    </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.likeBtn}
-                >
-                    <Heart width={24} height={24} fill="white" />
-                </TouchableOpacity>
+                
                 
                 <Animated.View style={[styles.bgSquare]} />
                 <View style={{ marginHorizontal: sizes.bgPokeballSize * 0.15}}>
@@ -249,7 +235,21 @@ export default class PokemonDetails extends Component {
                         </View>
                     </ScrollView>
                 </Animated.View>
-
+                <TouchableOpacity
+                    style={styles.backBtn}
+                    onPress={() => {
+                        this.props.navigation.navigate('Home')
+                    }}
+                >
+                    <View style={{ width: 40, height: 40 }}>
+                        <ArrowLeft width={24} height={24} fill="white" />
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.likeBtn}
+                >
+                    <Heart width={24} height={24} fill="white" />
+                </TouchableOpacity>
 
             </SafeAreaView>
         )
