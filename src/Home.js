@@ -8,7 +8,8 @@ import {
     Image,
     StyleSheet,
     SafeAreaView,
-    ActivityIndicator
+    ActivityIndicator,
+    ScrollView
 } from 'react-native'
 import LeftArrow from './assets/svgs/left-arrow.svg'
 import Menu from './assets/svgs/menu.svg'
@@ -30,53 +31,40 @@ export default class Home extends Component {
     }
 
     componentDidMount() {
-        this.fetchPokemon()
+        this.fetchSomePokemons()
     }
 
-    fetchPokemonDetails = async url => {
-        fetch(url)
-            .then(response => { return response.json(); })
-            .then(responseJson => {
-                console.log('response ', responseJson)
-                this.setState({
-                    pokemons: [...this.state.pokemons, responseJson].sort((a, b) => { return a.id - b.id })
-                })
-            })
-    }
-
-    fetchPokemon = () => {
-        this.setState({ fetchingPokemon: true })
-        fetch(this.state.nextUrl)
-            .then(response => { return response.json(); })
-            .then(responseJson => {
-                responseJson.results.map(result => {
-                    this.fetchPokemonDetails(result.url)
-                })
-                this.setState({
-                    nextUrl: responseJson.next,
-                    fetchingPokemon: false
-                })
-            })
+    fetchSomePokemons = async () => {
+        this.setState({fetchingPokemon: true})
+        const promises = []
+        for (var i = this.state.pokemons.length+1; i <= this.state.pokemons.length+100; i++) {
+            promises.push(fetch('https://pokeapi.co/api/v2/pokemon/' + i))
+        }
+        const responses = await Promise.all(promises)
+        let pokemons = []
+        for(var i =0; i< 100; i++){
+            const pokemon = await responses[i].json()
+            pokemons.push(pokemon)
+        }
+        this.setState({pokemons: this.state.pokemons.concat(pokemons), fetchingPokemon: false})
     }
 
     renderPokemonCard = pokemon => {
-        console.log('types', pokemon.types[pokemon.types.length-1])
         return (
             <View style={styles.pokemonCardWrapper}>
                 <TouchableOpacity
-                    onPress={()=>{
-                        this.props.navigation.navigate("PokemonDetails", {pokemon: pokemon})
+                    onPress={() => {
+                        this.props.navigation.navigate("PokemonDetails", { pokemon: pokemon })
                     }}
                 >
-                    <View style={[styles.pokemonCard, {backgroundColor: getTypeColor(pokemon.types[pokemon.types.length-1].type.name)}]}>
+                    <View style={[styles.pokemonCard, { backgroundColor: getTypeColor(pokemon.types[pokemon.types.length - 1].type.name) }]}>
                         <Image
                             style={styles.bgPokeballCard}
                             source={require('./assets/imgs/pokeball.png')}
                         />
                         <Text style={styles.pokemonCardName}>{pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</Text>
-                        {pokemon.types.map(type=>{
-                            console.log('type', type)
-                            return(
+                        {pokemon.types.map(type => {
+                            return (
                                 <View style={styles.typeCard}>
                                     <Text style={styles.typeCardText}>{type.type.name}</Text>
                                 </View>
@@ -96,7 +84,7 @@ export default class Home extends Component {
 
     render() {
         return (
-            <SafeAreaView style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
                 <Image
                     style={styles.bgPokeball}
                     source={require('./assets/imgs/pokeball_black.png')}
@@ -119,25 +107,25 @@ export default class Home extends Component {
                     renderItem={({ item }) => this.renderPokemonCard(item)}
                     keyExtractor={item => item.id}
                     numColumns={2}
-                    onEndReachedThreshold={0.5}
-                    onEndReached={() => { if (!this.state.fetchingPokemon) { this.fetchPokemon() } }}
+                    onEndReachedThreshold={3}
+                    onEndReached={() => { if (!this.state.fetchingPokemon) { this.fetchSomePokemons() } }}
                     style={styles.flatList}
                     showsVerticalScrollIndicator={false}
                 />
                 {this.state.fetchingPokemon &&
                     (
-                    <View style={styles.loadingContainer}>
-                        <View style={styles.loadingIndicator}>
-                            <ActivityIndicator
-                                size="large"
-                                color={colors.red}
-                            />
+                        <View style={styles.loadingContainer}>
+                            <View style={styles.loadingIndicator}>
+                                <ActivityIndicator
+                                    size="large"
+                                    color={colors.red}
+                                />
+                            </View>
                         </View>
-                    </View>
                     )
                 }
-                
-            </SafeAreaView>
+
+            </View>
         )
     }
 }
