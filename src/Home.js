@@ -15,6 +15,7 @@ import LeftArrow from './assets/svgs/left-arrow.svg'
 import Menu from './assets/svgs/menu.svg'
 import { sizes, colors, getTypeColor } from './utils'
 
+console.disableYellowBox = true;
 const { width, height } = Dimensions.get('window')
 const baseImageUrl = 'https://pokeres.bastionbot.org/images/pokemon/'
 const bgPokeballSize = width / 2
@@ -37,14 +38,20 @@ export default class Home extends Component {
     fetchSomePokemons = async () => {
         this.setState({fetchingPokemon: true})
         const promises = []
-        for (var i = this.state.pokemons.length+1; i <= this.state.pokemons.length+100; i++) {
+        for (var i = this.state.pokemons.length+1; i <= this.state.pokemons.length+20; i++) {
             promises.push(fetch('https://pokeapi.co/api/v2/pokemon/' + i))
         }
         const responses = await Promise.all(promises)
         let pokemons = []
-        for(var i =0; i< 100; i++){
-            const pokemon = await responses[i].json()
-            pokemons.push(pokemon)
+        for(var i =0; i< 20; i++){
+            try{
+                const pokemon = await responses[i].json()
+                console.log("pokemon")
+                pokemons.push(pokemon)
+            } catch (e){
+                console.log(e)
+            }
+            
         }
         this.setState({pokemons: this.state.pokemons.concat(pokemons), fetchingPokemon: false})
     }
@@ -107,7 +114,7 @@ export default class Home extends Component {
                     renderItem={({ item }) => this.renderPokemonCard(item)}
                     keyExtractor={item => item.id}
                     numColumns={2}
-                    onEndReachedThreshold={3}
+                    onEndReachedThreshold={0.8}
                     onEndReached={() => { if (!this.state.fetchingPokemon) { this.fetchSomePokemons() } }}
                     style={styles.flatList}
                     showsVerticalScrollIndicator={false}

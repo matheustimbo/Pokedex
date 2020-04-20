@@ -11,6 +11,7 @@ import {
     ScrollView
 } from 'react-native'
 import ArrowLeft from './assets/svgs/left-arrow.svg'
+import ArrowRight from './assets/svgs/right-arrow.svg'
 import Heart from './assets/svgs/heart.svg'
 import { sizes, urls, getTypeColor } from './utils'
 import { PanGestureHandler, State } from 'react-native-gesture-handler'
@@ -26,21 +27,75 @@ export default class PokemonDetails extends Component {
             tabsScroll: new Animated.Value(0),
             pokeInfoTranslateY: new Animated.Value(0),
             pokeInfoOffset: 0,
+            pokeEvolutions: []
         }
     }
 
     getPokemonId = id => {
-        if(id < 10){
+        if (id < 10) {
             return '#00' + id
         }
-        if(id < 100){
+        if (id < 100) {
             return '#0' + id
         }
         return '#' + id
     }
 
     componentDidMount() {
+        let pokemon = this.props.route.params.pokemon
+        console.log("species", pokemon.species)
+        this.getEvolutionChain(pokemon)
         Animated.loop(Animated.timing(this.state.spinValue, { toValue: 1, duration: 5000, easing: Easing.linear, useNativeDriver: true, })).start()
+    }
+
+    getEvolutionChain = pokemon => {
+        fetch(pokemon.species.url)
+            .then(response => {
+                return response.json()
+            })
+            .then(species => {
+                let evolChainUrl = species.evolution_chain.url
+                fetch(evolChainUrl)
+                    .then(response => {
+                        return response.json()
+                    })
+                    .then(evolChain => {
+                        console.log('evolchain', evolChain)
+                        this.getEvolvesTo(evolChain.chain)
+                    })
+            })
+    }
+
+    getEvolvesTo = async evolvesTo => {
+        evolvesTo.evolves_to.map(async evolvesToPokemon => {
+            let poke1Url = evolvesTo.species.url
+            let poke1 = await fetch(poke1Url)
+                .then(async response => {
+                    return response.json()
+                }).then(async specie => {
+                    let pokemon = await fetch(specie.varieties[0].pokemon.url)
+                        .then(response => {
+                            return response.json()
+                        })
+                    return pokemon
+                })
+            let poke2Url = evolvesToPokemon.species.url
+            let poke2 = await fetch(poke2Url)
+                .then(async response => {
+                    return response.json()
+                }).then(async specie => {
+                    let pokemon = await fetch(specie.varieties[0].pokemon.url)
+                        .then(response => {
+                            return response.json()
+                        })
+                    return pokemon
+                })
+            this.setState({ pokeEvolutions: [...this.state.pokeEvolutions, [poke1, poke2]] })
+        })
+
+        evolvesTo.evolves_to.map(evolvesto => {
+            this.getEvolvesTo(evolvesto)
+        })
     }
 
     onHandlerStateChange = event => {
@@ -92,7 +147,7 @@ export default class PokemonDetails extends Component {
             extrapolate: 'clamp'
         })
         const bgPokeballOpacity = this.state.pokeInfoTranslateY.interpolate({
-            inputRange: [-(height / 2)/2, 0],
+            inputRange: [-(height / 2) / 2, 0],
             outputRange: [0, 0.2],
             extrapolate: 'clamp'
         })
@@ -102,13 +157,13 @@ export default class PokemonDetails extends Component {
             extrapolate: 'clamp'
         })
         const pokeImgOpacity = this.state.pokeInfoTranslateY.interpolate({
-            inputRange: [-(height / 2)/2, 0],
+            inputRange: [-(height / 2) / 2, 0],
             outputRange: [0, 1],
             extrapolate: 'clamp'
         })
         const pokeNameMarginTop = this.state.pokeInfoTranslateY.interpolate({
             inputRange: [-(height / 2), 0],
-            outputRange: [sizes.bgPokeballSize * 0.10 , sizes.bgPokeballSize * 0.15 + 24 + 20],
+            outputRange: [sizes.bgPokeballSize * 0.10, sizes.bgPokeballSize * 0.15 + 24 + 20],
             extrapolate: 'clamp'
         })
         const pokeNameMarginLeft = this.state.pokeInfoTranslateY.interpolate({
@@ -119,23 +174,23 @@ export default class PokemonDetails extends Component {
         return (
             <SafeAreaView style={{ flex: 1, backgroundColor: getTypeColor(pokemon.types[pokemon.types.length - 1].type.name), justifyContent: 'space-between', }}>
                 <Animated.Image
-                    style={[styles.bgPokeball, { transform: [{ rotate: spin }], opacity: bgPokeballOpacity}]}
+                    style={[styles.bgPokeball, { transform: [{ rotate: spin }], opacity: bgPokeballOpacity }]}
                     source={require('./assets/imgs/pokeball.png')}
                 />
                 <Animated.Image
-                    style={[styles.bgPokeballOnTop, { transform: [{ rotate: spin }], opacity: bgPokeballOnTopOpacity}]}
+                    style={[styles.bgPokeballOnTop, { transform: [{ rotate: spin }], opacity: bgPokeballOnTopOpacity }]}
                     source={require('./assets/imgs/pokeball.png')}
                 />
-                
-                
+
+
                 <Animated.View style={[styles.bgSquare]} />
-                <View style={{ marginHorizontal: sizes.bgPokeballSize * 0.15}}>
-                    <View style={{flexDirection: 'row', width: width - (sizes.bgPokeballSize * 0.15)*2, justifyContent: 'space-between'}}> 
-                        <Animated.Text style={[styles.pokeName, { transform: [{ translateY: pokeNameMarginTop }, {translateX: pokeNameMarginLeft}]}]}>{pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</Animated.Text>
-                        <Animated.Text style={[styles.pokeId, {opacity: pokeImgOpacity}]}>{this.getPokemonId(pokemon.id)}</Animated.Text>
+                <View style={{ marginHorizontal: sizes.bgPokeballSize * 0.15 }}>
+                    <View style={{ flexDirection: 'row', width: width - (sizes.bgPokeballSize * 0.15) * 2, justifyContent: 'space-between' }}>
+                        <Animated.Text style={[styles.pokeName, { transform: [{ translateY: pokeNameMarginTop }, { translateX: pokeNameMarginLeft }] }]}>{pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}</Animated.Text>
+                        <Animated.Text style={[styles.pokeId, { opacity: pokeImgOpacity }]}>{this.getPokemonId(pokemon.id)}</Animated.Text>
                     </View>
-                    
-                    <Animated.View style={{ flexDirection: 'row', marginTop: 8, opacity: pokeImgOpacity}}>
+
+                    <Animated.View style={{ flexDirection: 'row', marginTop: 8, opacity: pokeImgOpacity }}>
                         {pokemon.types.map(type => {
                             return (
                                 <View style={styles.typeCard}>
@@ -148,7 +203,7 @@ export default class PokemonDetails extends Component {
 
                 <Animated.View style={[styles.pokeInfoContainer, { transform: [{ translateY: pokeInfoMargin }] }]}>
                     <Animated.Image
-                        style={[styles.pokeImg, {opacity: pokeImgOpacity}]}
+                        style={[styles.pokeImg, { opacity: pokeImgOpacity }]}
                         source={{
                             uri: urls.baseImageUrl + pokemon.id + '.png'
                         }}
@@ -227,7 +282,56 @@ export default class PokemonDetails extends Component {
                         <View style={styles.tabView}>
 
                         </View>
-                        <View style={styles.tabView}>
+                        <View style={[styles.tabView, styles.evolTab]}>
+                            <Text style={styles.evolutionChainTitle}>Evolution Chain</Text>
+                            <ScrollView style={{ flex: 1 }}>
+                                {this.state.pokeEvolutions.map((chain, index) => {
+                                    let poke1 = chain[0]
+                                    let poke2 = chain[1]
+                                    return (
+                                        <View style={[styles.evolChainContainer, index == this.state.pokeEvolutions.length - 1 ? {} : { borderBottomWidth: 1, borderColor: '#EDEDED', }]}>
+                                            <TouchableOpacity
+                                                onPress={() => { this.props.navigation.navigate('PokemonDetails', { pokemon: poke1 }) }}
+                                            >
+                                                <View>
+                                                    <Image
+                                                        style={[styles.evolChainPokeImg, { position: 'absolute', left: 0, top: 0, opacity: 0.1 }]}
+                                                        source={require('./assets/imgs/pokeball_black.png')}
+                                                    />
+                                                    <Image
+                                                        style={styles.evolChainPokeImg}
+                                                        source={{
+                                                            uri: urls.baseImageUrl + poke1.id + '.png'
+                                                        }}
+                                                    />
+
+                                                </View>
+                                            </TouchableOpacity>
+
+                                            <View>
+                                                <ArrowRight width={32} height={32} fill="#EDEDED" />
+                                            </View>
+                                            <TouchableOpacity
+                                                onPress={()=>{this.props.navigation.navigate("PokemonDetails", {pokemon: poke2})}}
+                                            >
+                                                <View>
+                                                    <Image
+                                                        style={[styles.evolChainPokeImg, { position: 'absolute', left: 0, top: 0, opacity: 0.1 }]}
+                                                        source={require('./assets/imgs/pokeball_black.png')}
+                                                    />
+                                                    <Image
+                                                        style={styles.evolChainPokeImg}
+                                                        source={{
+                                                            uri: urls.baseImageUrl + poke2.id + '.png'
+                                                        }}
+                                                    />
+                                                </View>
+                                            </TouchableOpacity>
+
+                                        </View>
+                                    )
+                                })}
+                            </ScrollView>
 
                         </View>
                         <View style={styles.tabView}>
@@ -257,6 +361,23 @@ export default class PokemonDetails extends Component {
 }
 
 const styles = StyleSheet.create({
+    evolutionChainTitle: {
+        alignSelf: 'flex-start',
+        fontWeight: 'bold',
+        fontSize: 16,
+        marginLeft: width * 0.05
+    },
+    evolChainPokeImg: {
+        width: width * 0.2,
+        height: width * 0.2
+    },
+    evolChainContainer: {
+        width: width * 0.9,
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        flexDirection: 'row',
+        paddingVertical: 20
+    },
     tabSelectedIndicator: {
         width: (width * 0.9) / 4,
         height: 3,
@@ -274,6 +395,11 @@ const styles = StyleSheet.create({
         width: width,
         height: (height * 0.45) * 2,
         backgroundColor: 'white'
+    },
+    evolTab: {
+        alignItems: 'center',
+        paddingHorizontal: width * 0.05,
+        paddingTop: width * 0.1
     },
     tabTitle: {
         width: (width * 0.9) / 4,
@@ -299,16 +425,16 @@ const styles = StyleSheet.create({
         opacity: 0.2,
         width: bgPokeballSize,
         height: bgPokeballSize,
-        left: width/2 - bgPokeballSize/2,
+        left: width / 2 - bgPokeballSize / 2,
         top: height / 2 - bgPokeballSize,
     },
     bgPokeballOnTop: {
         position: 'absolute',
         opacity: 0.2,
-        width: bgPokeballSize*0.7,
-        height: bgPokeballSize*0.7,
-        right: -bgPokeballSize*0.15,
-        top:  -bgPokeballSize*0.15,
+        width: bgPokeballSize * 0.7,
+        height: bgPokeballSize * 0.7,
+        right: -bgPokeballSize * 0.15,
+        top: -bgPokeballSize * 0.15,
     },
     pokeImg: {
         width: pokemonBannerSize,
