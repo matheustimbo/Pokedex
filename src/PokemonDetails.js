@@ -17,7 +17,6 @@ import { sizes, urls, getTypeColor } from './utils'
 import { PanGestureHandler, State } from 'react-native-gesture-handler'
 
 const { width, height, pokemonBannerSize, bgPokeballSize } = sizes;
-
 export default class PokemonDetails extends Component {
     translateY = new Animated.Value(0)
     constructor() {
@@ -203,12 +202,17 @@ export default class PokemonDetails extends Component {
                 </View>
 
                 <Animated.View style={[styles.pokeInfoContainer, { transform: [{ translateY: pokeInfoMargin }] }]}>
-                    <Animated.Image
-                        style={[styles.pokeImg, { opacity: pokeImgOpacity }]}
-                        source={{
-                            uri: urls.baseImageUrl + pokemon.id + '.png'
-                        }}
-                    />
+                    <PanGestureHandler
+                        onGestureEvent={evt=>console.log('evt', evt.nativeEvent.translationX)}
+                    >
+                        <Animated.Image
+                            style={[styles.pokeImg, { opacity: pokeImgOpacity }]}
+                            source={{
+                                uri: urls.baseImageUrl + pokemon.id + '.png'
+                            }}
+                        />
+                    </PanGestureHandler>
+                    
                     <PanGestureHandler
                         onHandlerStateChange={event => this.onHandlerStateChange(event)}
                         onGestureEvent={Animated.event([{ nativeEvent: { translationY: this.state.pokeInfoTranslateY } }], { useNativeDriver: true })}>
@@ -220,7 +224,7 @@ export default class PokemonDetails extends Component {
                                     }}
                                 >
                                     <View style={styles.tabTitle}>
-                                        <Text>About</Text>
+                                        <Animated.Text style={[styles.tabText, {color: this.state.tabsScroll.interpolate({ inputRange: [0, width/2], outputRange: ['rgb(0,0,0)', 'rgb(188,188,188)'], extrapolate: 'clamp'})}]}>About</Animated.Text>
                                     </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity
@@ -229,7 +233,7 @@ export default class PokemonDetails extends Component {
                                     }}
                                 >
                                     <View style={styles.tabTitle}>
-                                        <Text>Base Stats</Text>
+                                        <Animated.Text style={[styles.tabText, {color: this.state.tabsScroll.interpolate({ inputRange: [width/2, width, width*1.5], outputRange: ['rgb(188,188,188)', 'rgb(0,0,0)', 'rgb(188,188,188)'], extrapolate: 'clamp'})}]}>Base Stats</Animated.Text>
                                     </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity
@@ -238,7 +242,7 @@ export default class PokemonDetails extends Component {
                                     }}
                                 >
                                     <View style={styles.tabTitle}>
-                                        <Text>Evolution</Text>
+                                        <Animated.Text style={[styles.tabText, {color: this.state.tabsScroll.interpolate({ inputRange: [width*1.5, width*2, width*2.5], outputRange: ['rgb(188,188,188)', 'rgb(0,0,0)', 'rgb(188,188,188)'], extrapolate: 'clamp'})}]}>Evolution</Animated.Text>
                                     </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity
@@ -247,7 +251,7 @@ export default class PokemonDetails extends Component {
                                     }}
                                 >
                                     <View style={styles.tabTitle}>
-                                        <Text>Moves</Text>
+                                        <Animated.Text style={[styles.tabText, {color: this.state.tabsScroll.interpolate({ inputRange: [width*2.5, width*3], outputRange: ['rgb(188,188,188)', 'rgb(0,0,0)'], extrapolate: 'clamp'})}]}>Moves</Animated.Text>
                                     </View>
                                 </TouchableOpacity>
 
@@ -358,6 +362,9 @@ export default class PokemonDetails extends Component {
 }
 
 const styles = StyleSheet.create({
+    tabText: {
+        fontWeight: 'bold'
+    },
     evolutionChainTitle: {
         alignSelf: 'flex-start',
         fontWeight: 'bold',
