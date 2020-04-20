@@ -67,7 +67,7 @@ export default class PokemonDetails extends Component {
     }
 
     getEvolvesTo = async evolvesTo => {
-        evolvesTo.evolves_to.map(async evolvesToPokemon => {
+        await evolvesTo.evolves_to.map(async evolvesToPokemon => {
             let poke1Url = evolvesTo.species.url
             let poke1 = await fetch(poke1Url)
                 .then(async response => {
@@ -92,10 +92,11 @@ export default class PokemonDetails extends Component {
                 })
             this.setState({ pokeEvolutions: [...this.state.pokeEvolutions, [poke1, poke2]] })
         })
-
         evolvesTo.evolves_to.map(evolvesto => {
             this.getEvolvesTo(evolvesto)
         })
+
+        
     }
 
     onHandlerStateChange = event => {
@@ -143,7 +144,7 @@ export default class PokemonDetails extends Component {
         })
         const pokeInfoMargin = this.state.pokeInfoTranslateY.interpolate({
             inputRange: [-height / 2, 0],
-            outputRange: [-height * 0.1, height * 0.3],
+            outputRange: [-(height * 0.2 - (sizes.bgPokeballSize * 0.15 + 40)), height * 0.3],
             extrapolate: 'clamp'
         })
         const bgPokeballOpacity = this.state.pokeInfoTranslateY.interpolate({
@@ -264,11 +265,7 @@ export default class PokemonDetails extends Component {
                         pagingEnabled
                         ref={(ref) => this.myScroll = ref}
                         style={{
-                            width: width,
-                            height: height * 0.45 - 24
-                        }}
-                        contentContainerStyle={{
-                            justifyContent: 'flex-end', alignItems: 'flex-end'
+                            flex: 1
                         }}
                         onScroll={Animated.event(
                             [{ nativeEvent: { contentOffset: { x: this.state.tabsScroll } } }]
@@ -393,13 +390,15 @@ const styles = StyleSheet.create({
     },
     tabView: {
         width: width,
-        height: (height * 0.45) * 2,
+        flex: 1,
         backgroundColor: 'white'
     },
     evolTab: {
         alignItems: 'center',
         paddingHorizontal: width * 0.05,
-        paddingTop: width * 0.1
+        paddingTop: width * 0.1,
+        //height: height*0.8 - width*0.1
+        flex: 1
     },
     tabTitle: {
         width: (width * 0.9) / 4,
@@ -445,7 +444,7 @@ const styles = StyleSheet.create({
     },
     pokeInfoContainer: {
         width: width,
-        height: height,
+        height: height - (sizes.bgPokeballSize * 0.15 + 40),
         backgroundColor: 'white',
         alignSelf: 'flex-end',
         borderTopLeftRadius: 30,
